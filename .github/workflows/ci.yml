@@ -14,8 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  baseline:
-    name: Repository baseline
+  backend-foundation:
+    name: Backend foundation
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -35,31 +35,28 @@ jobs:
             exit 1
           fi
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
       - name: Set up Node.js
-        if: hashFiles('package.json') != ''
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
-      - name: Set up pnpm
-        if: hashFiles('package.json') != ''
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
       - name: Install dependencies
-        if: hashFiles('package.json') != ''
         run: pnpm install --frozen-lockfile
 
       - name: Type-check
-        if: hashFiles('package.json') != ''
-        run: pnpm run check --if-present
+        run: pnpm run typecheck
 
       - name: Run tests
-        if: hashFiles('package.json') != ''
-        run: pnpm test --if-present
+        run: pnpm test
 
       - name: Build
-        if: hashFiles('package.json') != ''
-        run: pnpm run build --if-present
+        run: pnpm run build
+
+      - name: Check formatting
+        run: pnpm run format:check
