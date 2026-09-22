@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { loadConfig } from "../server/config/env.js";
 import { checkDatabase } from "../server/db/client.js";
-import { createAuthContext, requireAuthenticated } from "../server/security/auth-context.js";
+import {
+  createAuthContext,
+  requireAuthenticated,
+} from "../server/security/auth-context.js";
 
 describe("server configuration", () => {
   it("accepts a safe test configuration and exposes no secret values", () => {
