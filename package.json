@@ -1,0 +1,39 @@
+{
+  "name": "stealth-mail-studio",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch server/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server/index.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format:check": "prettier --check package.json tsconfig.json vitest.config.ts server tests README.md",
+    "db:check": "tsx server/scripts/check-db.ts"
+  },
+  "dependencies": {
+    "@trpc/server": "^11.0.0",
+    "cors": "^2.8.5",
+    "drizzle-orm": "^0.36.4",
+    "express": "^4.21.2",
+    "googleapis": "^144.0.0",
+    "helmet": "^8.0.0",
+    "jose": "^6.0.8",
+    "mysql2": "^3.11.5",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.5",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
