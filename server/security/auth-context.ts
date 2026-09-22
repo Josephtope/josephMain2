@@ -6,7 +6,10 @@ export type AuthContext = {
   sessionCookie?: string;
 };
 
-function cookieValue(header: string | undefined, name: string): string | undefined {
+function cookieValue(
+  header: string | undefined,
+  name: string,
+): string | undefined {
   if (!header) return undefined;
   const pair = header
     .split(";")
@@ -15,7 +18,9 @@ function cookieValue(header: string | undefined, name: string): string | undefin
   return pair?.slice(name.length + 1);
 }
 
-export function createAuthContext(req: Request & { requestId?: string }): AuthContext {
+export function createAuthContext(
+  req: Request & { requestId?: string },
+): AuthContext {
   const authorization = req.header("authorization");
   const bearerToken = authorization?.match(/^Bearer\s+([^\s]+)$/i)?.[1];
   const sessionCookie = cookieValue(req.header("cookie"), "sms_session");
