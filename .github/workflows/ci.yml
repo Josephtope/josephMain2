@@ -58,5 +58,8 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Check migration consistency
+        run: pnpm exec drizzle-kit check
+
       - name: Check formatting
         run: pnpm run format:check
