@@ -4,7 +4,10 @@ import type { AppConfig } from "../config/env.js";
 
 export type Database = ReturnType<typeof drizzle>;
 
-export function createDatabase(config: AppConfig): { db?: Database; pool?: mysql.Pool } {
+export function createDatabase(config: AppConfig): {
+  db?: Database;
+  pool?: mysql.Pool;
+} {
   if (!config.DATABASE_URL) return {};
   const pool = mysql.createPool({
     uri: config.DATABASE_URL,
