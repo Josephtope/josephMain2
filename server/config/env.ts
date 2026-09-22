@@ -9,6 +9,7 @@ const envSchema = z.object({
     .string()
     .default("http://localhost:8081,http://localhost:19006"),
   DATABASE_URL: z.string().url().optional(),
+  EXPECTED_SCHEMA_VERSION: z.string().min(1).default("phase4-baseline"),
   SESSION_SIGNING_KEY: z.string().min(32).optional(),
   SESSION_SECRET: z.string().min(32).optional(),
   TOKEN_ENCRYPTION_KEY: z.string().min(16).optional(),
@@ -50,5 +51,6 @@ export function redactedConfig(config: AppConfig): Record<string, unknown> {
     port: config.PORT,
     allowedOrigins: config.allowedOrigins,
     databaseConfigured: Boolean(config.DATABASE_URL),
+    expectedSchemaVersion: config.EXPECTED_SCHEMA_VERSION,
   };
 }

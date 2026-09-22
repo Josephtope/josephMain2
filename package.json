@@ -13,8 +13,11 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "format:check": "prettier --check package.json tsconfig.json vitest.config.ts server tests README.md",
-    "db:check": "tsx server/scripts/check-db.ts"
+    "format:check": "prettier --check package.json tsconfig.json vitest.config.ts drizzle.config.ts server tests README.md PHASE_4_DATABASE_MIGRATIONS.md",
+    "db:check": "tsx server/scripts/check-db.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:verify": "tsx server/scripts/verify-schema.ts"
   },
   "dependencies": {
     "@trpc/server": "^11.0.0",
@@ -31,6 +34,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.5",
+    "drizzle-kit": "0.30.6",
     "prettier": "^3.4.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
