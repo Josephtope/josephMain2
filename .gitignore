@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Expo / React Native
+.expo/
+.expo-shared/
+dist/
+web-build/
+android/
+ios/
+
+# Builds and coverage
+build/
+coverage/
+*.tsbuildinfo
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Logs and local state
+*.log
+.DS_Store
+.vscode/settings.json
+.idea/
+
+# Temporary files
+.tmp/
+tmp/
+
+# Test artifacts
+playwright-report/
+test-results/
+
+# OS/editor files
+*.swp
+*.swo
