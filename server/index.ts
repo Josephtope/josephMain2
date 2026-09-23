@@ -10,12 +10,14 @@ import { installErrorHandler, installMiddleware } from "./http/middleware.js";
 import { log } from "./http/logger.js";
 import { createAuthContext } from "./security/auth-context.js";
 import { appRouter } from "./routers.js";
+import { installAuthRoutes } from "./auth/routes.js";
 
 export function createApp() {
   const config = loadConfig();
   const app = express();
   const database = createDatabase(config);
   installMiddleware(app, config);
+  installAuthRoutes(app, config, database.db);
 
   app.get("/api/health", (_req, res) =>
     res.status(200).json({
