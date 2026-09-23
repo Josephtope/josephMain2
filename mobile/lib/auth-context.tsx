@@ -34,6 +34,26 @@ type Lead = {
   sourceRowKey?: string | null;
   status: string;
 };
+type Campaign = {
+  id: number;
+  name: string;
+  mode: string;
+  approvalPolicy: string;
+  status: string;
+};
+type Job = {
+  id: number;
+  campaignId: number;
+  leadId: number;
+  status: string;
+  attemptCount: number;
+  safeErrorCode?: string | null;
+};
+type WorkspaceControl = {
+  paused: boolean;
+  killSwitch: boolean;
+  maxConcurrentJobs: number;
+};
 type CallbackResult = {
   flow: "login" | "sender";
   status: "success" | "error";
@@ -52,6 +72,9 @@ type AuthContextValue = {
   connections: Connection[];
   bindings: SheetBinding[];
   leads: Lead[];
+  campaigns: Campaign[];
+  jobs: Job[];
+  workspaceControl: WorkspaceControl | null;
   loading: boolean;
   lastCallback: CallbackResult | null;
   signIn: () => Promise<void>;
@@ -63,6 +86,9 @@ type AuthContextValue = {
   importSheet: (
     bindingId: number,
   ) => Promise<{ importedCount: number; skippedCount: number }>;
+  refreshCampaigns: () => Promise<void>;
+  refreshJobs: (campaignId?: number) => Promise<void>;
+  refreshWorkspaceControl: () => Promise<void>;
   processCallback: (url: string) => Promise<CallbackResult | null>;
   signOut: () => Promise<void>;
 };
@@ -95,6 +121,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [bindings, setBindings] = useState<SheetBinding[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [workspaceControl, setWorkspaceControl] =
+    useState<WorkspaceControl | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastCallback, setLastCallback] = useState<CallbackResult | null>(null);
 
@@ -190,6 +220,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [refreshLeads, request],
   );
 
+  const refreshCampaigns = useCallback(async () => {
+    if (!session) {
+      setCampaigns([]);
+      return;
+    }
+    const response = await request("/api/campaigns");
+    if (response.ok) setCampaigns((await response.json()).campaigns ?? []);
+  }, [request, session]);
+
+  const refreshJobs = useCallback(
+    async (campaignId?: number) => {
+      if (!session) {
+        setJobs([]);
+        return;
+      }
+      const suffix = campaignId ? `?campaignId=${campaignId}` : "";
+      const response = await request(`/api/jobs${suffix}`);
+      if (response.ok) setJobs((await response.json()).jobs ?? []);
+    },
+    [request, session],
+  );
+
+  const refreshWorkspaceControl = useCallback(async () => {
+    if (!session) {
+      setWorkspaceControl(null);
+      return;
+    }
+    const response = await request("/api/workspace/control");
+    if (response.ok) setWorkspaceControl((await response.json()).control);
+  }, [request, session]);
+
   useEffect(() => {
     SecureStore.getItemAsync(SESSION_KEY).then((stored) => {
       if (stored) setSession(stored);
@@ -203,6 +264,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setConnections([]);
       setBindings([]);
       setLeads([]);
+      setCampaigns([]);
+      setJobs([]);
+      setWorkspaceControl(null);
       return;
     }
     Promise.all([
@@ -210,8 +274,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refreshConnections(),
       refreshBindings(),
       refreshLeads(),
+      refreshCampaigns(),
+      refreshJobs(),
+      refreshWorkspaceControl(),
     ]).catch(() => setSession(null));
-  }, [refreshBindings, refreshConnections, refreshLeads, refreshMe, session]);
+  }, [
+    refreshBindings,
+    refreshCampaigns,
+    refreshConnections,
+    refreshJobs,
+    refreshLeads,
+    refreshMe,
+    refreshWorkspaceControl,
+    session,
+  ]);
 
   const signIn = useCallback(async () => {
     await Linking.openURL(
@@ -285,6 +361,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setConnections([]);
     setBindings([]);
     setLeads([]);
+    setCampaigns([]);
+    setJobs([]);
+    setWorkspaceControl(null);
   }, [request, session]);
 
   const value = useMemo(
@@ -295,6 +374,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       connections,
       bindings,
       leads,
+      campaigns,
+      jobs,
+      workspaceControl,
       loading,
       lastCallback,
       signIn,
@@ -306,24 +388,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       importSheet,
       processCallback,
       signOut,
+      refreshCampaigns,
+      refreshJobs,
+      refreshWorkspaceControl,
     }),
     [
       bindSheet,
       bindings,
+      campaigns,
       connectSender,
       connections,
       importSheet,
+      jobs,
       lastCallback,
       leads,
       loading,
       processCallback,
       refreshBindings,
+      refreshCampaigns,
       refreshConnections,
+      refreshJobs,
       refreshLeads,
+      refreshWorkspaceControl,
       session,
       signIn,
       signOut,
       user,
+      workspaceControl,
     ],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
