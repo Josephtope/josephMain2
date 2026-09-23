@@ -6,6 +6,8 @@ Phase 11 prepares a reproducible deployment of the new Stealth Mail Studio syste
 
 Deploy the merged `main` branch of `Josephtope/josephMain2`. The repository contains separate compiled web and worker entry points. The production worker must run `node dist/server/worker.js`; it must not run TypeScript through `tsx`.
 
+The repository includes `pnpm-workspace.yaml` with `allowBuilds.esbuild: true`. This is required by Railway's pnpm build policy so the esbuild postinstall binary is available during the production build.
+
 ## Required Railway resources
 
 | Resource          | Source/configuration                                                                        | Command or role                                                          |
