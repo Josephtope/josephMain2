@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import * as Haptics from "expo-haptics";
 import * as Linking from "expo-linking";
 import {
@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [request, session]);
 
   useEffect(() => {
-    AsyncStorage.getItem(SESSION_KEY).then(async (stored) => {
+    SecureStore.getItemAsync(SESSION_KEY).then(async (stored) => {
       if (stored) setSession(stored);
       setLoading(false);
     });
@@ -164,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
         if (!response.ok) throw new Error("login_exchange_failed");
         const data = await response.json();
-        await AsyncStorage.setItem(SESSION_KEY, data.session.credential);
+        await SecureStore.setItemAsync(SESSION_KEY, data.session.credential);
         setSession(data.session.credential);
         await Haptics.notificationAsync(
           Haptics.NotificationFeedbackType.Success,
@@ -188,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await request("/api/auth/logout", { method: "POST" }).catch(
         () => undefined,
       );
-    await AsyncStorage.removeItem(SESSION_KEY);
+    await SecureStore.deleteItemAsync(SESSION_KEY);
     setSession(null);
     setUser(null);
     setConnections([]);
