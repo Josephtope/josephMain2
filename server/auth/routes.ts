@@ -18,6 +18,13 @@ import {
   SenderAuthError,
 } from "./sender-service.js";
 import { verifySenderState } from "./sender-crypto.js";
+import {
+  SheetsError,
+  bindSheet,
+  importSheetLeads,
+  listLeads,
+  listSheetBindings,
+} from "../sheets-service.js";
 
 const startSchema = z.object({ nativeReturnUri: z.string().min(1).max(512) });
 const callbackSchema = z.object({
@@ -49,10 +56,15 @@ function credentialFromRequest(req: Request): string | undefined {
 function sendAuthError(res: Response, error: unknown, requestId?: string) {
   const authError = error instanceof AuthFlowError ? error : undefined;
   const senderError = error instanceof SenderAuthError ? error : undefined;
-  const status = authError?.status ?? (senderError ? 400 : 500);
+  const sheetsError = error instanceof SheetsError ? error : undefined;
+  const status = authError?.status ?? (senderError || sheetsError ? 400 : 500);
   return res.status(status).json({
     error: {
-      code: authError?.code ?? senderError?.code ?? "internal_error",
+      code:
+        authError?.code ??
+        senderError?.code ??
+        sheetsError?.code ??
+        "internal_error",
       message:
         status >= 500
           ? "Authentication service unavailable"
@@ -231,6 +243,60 @@ export function installAuthRoutes(
       res.status(200).json({
         connections: await listSenderConnections(database, user.userId),
       });
+    } catch (error) {
+      sendAuthError(res, error, requestId(req));
+    }
+  });
+
+  async function authenticatedUser(req: Request) {
+    const credential = credentialFromRequest(req);
+    if (!credential) throw new SheetsError("invalid_session");
+    return authenticateSession(config, database, credential).catch(() => {
+      throw new SheetsError("invalid_session");
+    });
+  }
+
+  app.get("/api/sheets/bindings", async (req, res) => {
+    try {
+      const user = await authenticatedUser(req);
+      res
+        .status(200)
+        .json({ bindings: await listSheetBindings(database, user.userId) });
+    } catch (error) {
+      sendAuthError(res, error, requestId(req));
+    }
+  });
+
+  app.post("/api/sheets/bind", async (req, res) => {
+    try {
+      const user = await authenticatedUser(req);
+      res.status(201).json({
+        binding: await bindSheet(config, database, user.userId, req.body),
+      });
+    } catch (error) {
+      sendAuthError(res, error, requestId(req));
+    }
+  });
+
+  app.post("/api/sheets/import", async (req, res) => {
+    try {
+      const user = await authenticatedUser(req);
+      res.status(200).json({
+        result: await importSheetLeads(config, database, user.userId, req.body),
+      });
+    } catch (error) {
+      sendAuthError(res, error, requestId(req));
+    }
+  });
+
+  app.get("/api/leads", async (req, res) => {
+    try {
+      const user = await authenticatedUser(req);
+      const status =
+        typeof req.query.status === "string" ? req.query.status : undefined;
+      res
+        .status(200)
+        .json({ leads: await listLeads(database, user.userId, status) });
     } catch (error) {
       sendAuthError(res, error, requestId(req));
     }

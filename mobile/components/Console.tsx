@@ -157,4 +157,12 @@ export const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
+  input: {
+    borderColor: palette.border,
+    borderRadius: 12,
+    borderWidth: 1,
+    color: palette.ink,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+  },
 });
