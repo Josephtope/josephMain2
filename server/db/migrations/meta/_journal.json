@@ -8,6 +8,13 @@
       "when": 1790114694687,
       "tag": "0000_phase4_baseline",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1790124544956,
+      "tag": "0001_phase6_sender_authorization",
+      "breakpoints": true
     }
   ]
 }
