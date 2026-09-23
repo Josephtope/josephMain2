@@ -5,9 +5,8 @@ const envSchema = z.object({
     .enum(["development", "test", "production"])
     .default("development"),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
-  PUBLIC_API_ORIGINS: z
-    .string()
-    .default("http://localhost:8081,http://localhost:19006"),
+  PUBLIC_API_ORIGINS: z.string().optional(),
+  PUBLIC_WEB_ORIGIN_ALLOWLIST: z.string().optional(),
   DATABASE_URL: z.string().url().optional(),
   EXPECTED_SCHEMA_VERSION: z
     .string()
@@ -92,7 +91,12 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
   }
   return {
     ...config,
-    allowedOrigins: config.PUBLIC_API_ORIGINS.split(",")
+    allowedOrigins: (
+      config.PUBLIC_WEB_ORIGIN_ALLOWLIST ??
+      config.PUBLIC_API_ORIGINS ??
+      "http://localhost:8081,http://localhost:19006"
+    )
+      .split(",")
       .map((origin) => origin.trim())
       .filter(Boolean),
   };

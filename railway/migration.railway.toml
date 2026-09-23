@@ -1,0 +1,9 @@
+# Configure this file as a one-time migration service or release command.
+# Run it only after the new MySQL service exists and DATABASE_URL is attached.
+[build]
+builder = "NIXPACKS"
+buildCommand = "pnpm install --frozen-lockfile"
+
+[deploy]
+startCommand = "pnpm db:migrate"
+restartPolicyType = "NEVER"
