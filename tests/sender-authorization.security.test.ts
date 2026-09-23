@@ -23,7 +23,10 @@ describe("Phase 6 sender authorization security", () => {
     const encrypted = encryptToken(config(), "refresh-token-secret");
     expect(encrypted).not.toContain("refresh-token-secret");
     expect(decryptToken(config(), encrypted)).toBe("refresh-token-secret");
-    const tampered = `${encrypted.slice(0, -1)}${encrypted.endsWith("A") ? "B" : "A"}`;
+    const tamperIndex = Math.max(1, Math.floor(encrypted.length / 2));
+    const tampered = `${encrypted.slice(0, tamperIndex)}${
+      encrypted[tamperIndex] === "A" ? "B" : "A"
+    }${encrypted.slice(tamperIndex + 1)}`;
     expect(() => decryptToken(config(), tampered)).toThrow();
   });
 

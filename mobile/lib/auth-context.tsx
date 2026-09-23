@@ -19,10 +19,30 @@ type Connection = {
   tokenExpiresAt?: string | null;
   lastValidatedAt?: string | null;
 };
+type SheetBinding = {
+  id: number;
+  googleConnectionId: number;
+  spreadsheetId: string;
+  tabName: string;
+  status: string;
+};
+type Lead = {
+  id: number;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  sourceRowKey?: string | null;
+  status: string;
+};
 type CallbackResult = {
   flow: "login" | "sender";
   status: "success" | "error";
   code?: string;
+};
+type BindingInput = {
+  googleConnectionId: number;
+  spreadsheetId: string;
+  tabName: string;
 };
 
 type AuthContextValue = {
@@ -30,11 +50,19 @@ type AuthContextValue = {
   session: string | null;
   user: User | null;
   connections: Connection[];
+  bindings: SheetBinding[];
+  leads: Lead[];
   loading: boolean;
   lastCallback: CallbackResult | null;
   signIn: () => Promise<void>;
   connectSender: () => Promise<void>;
   refreshConnections: () => Promise<void>;
+  refreshBindings: () => Promise<void>;
+  refreshLeads: (status?: string) => Promise<void>;
+  bindSheet: (input: BindingInput) => Promise<SheetBinding>;
+  importSheet: (
+    bindingId: number,
+  ) => Promise<{ importedCount: number; skippedCount: number }>;
   processCallback: (url: string) => Promise<CallbackResult | null>;
   signOut: () => Promise<void>;
 };
@@ -65,6 +93,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [connections, setConnections] = useState<Connection[]>([]);
+  const [bindings, setBindings] = useState<SheetBinding[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastCallback, setLastCallback] = useState<CallbackResult | null>(null);
 
@@ -104,8 +134,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (response.ok) setConnections((await response.json()).connections ?? []);
   }, [request, session]);
 
+  const refreshBindings = useCallback(async () => {
+    if (!session) {
+      setBindings([]);
+      return;
+    }
+    const response = await request("/api/sheets/bindings");
+    if (response.ok) setBindings((await response.json()).bindings ?? []);
+  }, [request, session]);
+
+  const refreshLeads = useCallback(
+    async (status?: string) => {
+      if (!session) {
+        setLeads([]);
+        return;
+      }
+      const response = await request(
+        `/api/leads${status ? `?status=${encodeURIComponent(status)}` : ""}`,
+      );
+      if (response.ok) setLeads((await response.json()).leads ?? []);
+    },
+    [request, session],
+  );
+
+  const bindSheet = useCallback(
+    async (input: BindingInput) => {
+      const response = await request("/api/sheets/bind", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      if (!response.ok) throw new Error("sheet_binding_failed");
+      const binding = (await response.json()).binding as SheetBinding;
+      await refreshBindings();
+      return binding;
+    },
+    [refreshBindings, request],
+  );
+
+  const importSheet = useCallback(
+    async (bindingId: number) => {
+      const response = await request("/api/sheets/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bindingId }),
+      });
+      if (!response.ok) throw new Error("sheet_import_failed");
+      const result = (await response.json()).result as {
+        importedCount: number;
+        skippedCount: number;
+      };
+      await refreshLeads();
+      return result;
+    },
+    [refreshLeads, request],
+  );
+
   useEffect(() => {
-    SecureStore.getItemAsync(SESSION_KEY).then(async (stored) => {
+    SecureStore.getItemAsync(SESSION_KEY).then((stored) => {
       if (stored) setSession(stored);
       setLoading(false);
     });
@@ -115,12 +201,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!session) {
       setUser(null);
       setConnections([]);
+      setBindings([]);
+      setLeads([]);
       return;
     }
-    Promise.all([refreshMe(), refreshConnections()]).catch(() =>
-      setSession(null),
-    );
-  }, [refreshConnections, refreshMe, session]);
+    Promise.all([
+      refreshMe(),
+      refreshConnections(),
+      refreshBindings(),
+      refreshLeads(),
+    ]).catch(() => setSession(null));
+  }, [refreshBindings, refreshConnections, refreshLeads, refreshMe, session]);
 
   const signIn = useCallback(async () => {
     await Linking.openURL(
@@ -192,6 +283,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
     setUser(null);
     setConnections([]);
+    setBindings([]);
+    setLeads([]);
   }, [request, session]);
 
   const value = useMemo(
@@ -200,21 +293,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       user,
       connections,
+      bindings,
+      leads,
       loading,
       lastCallback,
       signIn,
       connectSender,
       refreshConnections,
+      refreshBindings,
+      refreshLeads,
+      bindSheet,
+      importSheet,
       processCallback,
       signOut,
     }),
     [
+      bindSheet,
+      bindings,
       connectSender,
       connections,
+      importSheet,
       lastCallback,
+      leads,
       loading,
       processCallback,
+      refreshBindings,
       refreshConnections,
+      refreshLeads,
       session,
       signIn,
       signOut,
