@@ -24,7 +24,7 @@ export default function ComposeScreen() {
       <Header
         eyebrow="Draft"
         title="Compose"
-        description="Draft, validate, and preview before any test. This screen never sends mail."
+        description="Draft, validate, and preview before explicit campaign approval. This screen never sends mail."
       />
       <Card>
         <View style={styles.row}>
@@ -98,8 +98,9 @@ export default function ComposeScreen() {
           Dry-run only
         </Text>
         <Text style={styles.body}>
-          Live Gmail sending is deliberately not enabled in Phase 7. Approval
-          and worker controls arrive in later phases.
+          Live Gmail sending is deliberately not enabled in Phase 9. Campaign
+          approval, durable jobs, and workspace controls remain provider-safe
+          until the Phase 10 worker.
         </Text>
       </Card>
     </Screen>

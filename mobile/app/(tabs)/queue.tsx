@@ -12,11 +12,15 @@ const statusFor = (filter: string) =>
   })[filter];
 
 export default function QueueScreen() {
-  const { user, leads, refreshLeads } = useAuth();
+  const { user, leads, jobs, workspaceControl, refreshLeads, refreshJobs } =
+    useAuth();
   const [filter, setFilter] = useState("All");
   useEffect(() => {
-    if (user) void refreshLeads(statusFor(filter));
-  }, [filter, refreshLeads, user]);
+    if (user) {
+      void refreshLeads(statusFor(filter));
+      void refreshJobs();
+    }
+  }, [filter, refreshJobs, refreshLeads, user]);
   const visible =
     filter === "Verified"
       ? leads.filter((lead) => lead.status === "imported")
@@ -26,8 +30,34 @@ export default function QueueScreen() {
       <Header
         eyebrow="Review"
         title="Queue"
-        description="Review imported rows before any campaign preparation."
+        description="Review imported rows and durable job state before provider execution."
       />
+      {user && workspaceControl ? (
+        <Card
+          style={{
+            backgroundColor:
+              workspaceControl.killSwitch || workspaceControl.paused
+                ? "#FFF8E8"
+                : "#F0FAF5",
+            borderColor:
+              workspaceControl.killSwitch || workspaceControl.paused
+                ? "#F0D9A2"
+                : "#B9E3CB",
+          }}
+        >
+          <Text style={styles.cardTitle}>
+            {workspaceControl.killSwitch
+              ? "Kill switch active"
+              : workspaceControl.paused
+                ? "Workspace paused"
+                : "Workspace ready"}
+          </Text>
+          <Text style={styles.body}>
+            {jobs.length} durable jobs · concurrency limit{" "}
+            {workspaceControl.maxConcurrentJobs}
+          </Text>
+        </Card>
+      ) : null}
       <View style={styles.row}>
         {filters.map((item) => (
           <Pressable

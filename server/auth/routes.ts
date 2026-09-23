@@ -25,6 +25,17 @@ import {
   listLeads,
   listSheetBindings,
 } from "../sheets-service.js";
+import {
+  CampaignError,
+  approveCampaign,
+  createCampaign,
+  createCampaignJobs,
+  getWorkspaceControl,
+  listCampaigns,
+  listJobs,
+  parseIdInput,
+  setWorkspaceControl,
+} from "../campaign-service.js";
 
 const startSchema = z.object({ nativeReturnUri: z.string().min(1).max(512) });
 const callbackSchema = z.object({
@@ -57,13 +68,17 @@ function sendAuthError(res: Response, error: unknown, requestId?: string) {
   const authError = error instanceof AuthFlowError ? error : undefined;
   const senderError = error instanceof SenderAuthError ? error : undefined;
   const sheetsError = error instanceof SheetsError ? error : undefined;
-  const status = authError?.status ?? (senderError || sheetsError ? 400 : 500);
+  const campaignError = error instanceof CampaignError ? error : undefined;
+  const status =
+    authError?.status ??
+    (senderError || sheetsError || campaignError ? 400 : 500);
   return res.status(status).json({
     error: {
       code:
         authError?.code ??
         senderError?.code ??
         sheetsError?.code ??
+        campaignError?.code ??
         "internal_error",
       message:
         status >= 500
@@ -297,6 +312,89 @@ export function installAuthRoutes(
       res
         .status(200)
         .json({ leads: await listLeads(database, user.userId, status) });
+    } catch (error) {
+      sendAuthError(res, error, requestId(req));
+    }
+  });
+
+  app.get("/api/campaigns", async (req, res) => {
+    try {
+      const user = await authenticatedUser(req);
+      res
+        .status(200)
+        .json({ campaigns: await listCampaigns(database, user.userId) });
+    } catch (error) {
+      sendAuthError(res, error, requestId(req));
+    }
+  });
+
+  app.post("/api/campaigns", async (req, res) => {
+    try {
+      const user = await authenticatedUser(req);
+      res.status(201).json({
+        campaign: await createCampaign(database, user.userId, req.body),
+      });
+    } catch (error) {
+      sendAuthError(res, error, requestId(req));
+    }
+  });
+
+  app.post("/api/campaigns/:id/approve", async (req, res) => {
+    try {
+      const user = await authenticatedUser(req);
+      const { id } = parseIdInput({ id: req.params.id });
+      res.status(200).json({
+        campaign: await approveCampaign(database, user.userId, id),
+      });
+    } catch (error) {
+      sendAuthError(res, error, requestId(req));
+    }
+  });
+
+  app.post("/api/campaigns/:id/jobs", async (req, res) => {
+    try {
+      const user = await authenticatedUser(req);
+      const { id } = parseIdInput({ id: req.params.id });
+      res.status(201).json({
+        jobs: await createCampaignJobs(database, user.userId, id),
+      });
+    } catch (error) {
+      sendAuthError(res, error, requestId(req));
+    }
+  });
+
+  app.get("/api/jobs", async (req, res) => {
+    try {
+      const user = await authenticatedUser(req);
+      const campaignId =
+        typeof req.query.campaignId === "string"
+          ? parseIdInput({ id: req.query.campaignId }).id
+          : undefined;
+      res.status(200).json({
+        jobs: await listJobs(database, user.userId, campaignId),
+      });
+    } catch (error) {
+      sendAuthError(res, error, requestId(req));
+    }
+  });
+
+  app.get("/api/workspace/control", async (req, res) => {
+    try {
+      const user = await authenticatedUser(req);
+      res.status(200).json({
+        control: await getWorkspaceControl(database, user.userId),
+      });
+    } catch (error) {
+      sendAuthError(res, error, requestId(req));
+    }
+  });
+
+  app.patch("/api/workspace/control", async (req, res) => {
+    try {
+      const user = await authenticatedUser(req);
+      res.status(200).json({
+        control: await setWorkspaceControl(database, user.userId, req.body),
+      });
     } catch (error) {
       sendAuthError(res, error, requestId(req));
     }
