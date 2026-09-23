@@ -1,0 +1,12 @@
+# Configure this file as the Web service's Railway Config File.
+# The service must be connected to the Josephtope/josephMain2 repository.
+[build]
+builder = "NIXPACKS"
+buildCommand = "pnpm install --frozen-lockfile && pnpm build"
+
+[deploy]
+startCommand = "pnpm start"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
