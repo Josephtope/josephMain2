@@ -9,10 +9,14 @@ const envSchema = z.object({
     .string()
     .default("http://localhost:8081,http://localhost:19006"),
   DATABASE_URL: z.string().url().optional(),
-  EXPECTED_SCHEMA_VERSION: z.string().min(1).default("phase4-baseline"),
+  EXPECTED_SCHEMA_VERSION: z
+    .string()
+    .min(1)
+    .default("phase6-sender-authorization"),
   GOOGLE_OAUTH_CLIENT_ID: z.string().min(1).optional(),
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1).optional(),
   GOOGLE_OAUTH_REDIRECT_URI: z.string().url().optional(),
+  GOOGLE_CONNECTION_REDIRECT_URI: z.string().url().optional(),
   NATIVE_RETURN_URI_ALLOWLIST: z
     .string()
     .default("manusstudio://oauth/callback")
@@ -79,6 +83,7 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
       ["GOOGLE_OAUTH_CLIENT_ID", config.GOOGLE_OAUTH_CLIENT_ID],
       ["GOOGLE_OAUTH_CLIENT_SECRET", config.GOOGLE_OAUTH_CLIENT_SECRET],
       ["GOOGLE_OAUTH_REDIRECT_URI", config.GOOGLE_OAUTH_REDIRECT_URI],
+      ["GOOGLE_CONNECTION_REDIRECT_URI", config.GOOGLE_CONNECTION_REDIRECT_URI],
       ["OAUTH_STATE_SIGNING_KEY", config.OAUTH_STATE_SIGNING_KEY],
     ] as const) {
       if (!value)

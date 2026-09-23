@@ -116,6 +116,32 @@ export const loginExchangeCodes = mysqlTable(
   }),
 );
 
+export const googleConnectionStates = mysqlTable(
+  "google_connection_states",
+  {
+    id: id().autoincrement().primaryKey(),
+    stateHash: varchar("state_hash", { length: 128 }).notNull(),
+    userId: bigint("user_id", { mode: "number", unsigned: true }).notNull(),
+    sessionIdentifier: varchar("session_identifier", { length: 64 }).notNull(),
+    nativeReturnUri: varchar("native_return_uri", { length: 512 }).notNull(),
+    nonceHash: varchar("nonce_hash", { length: 128 }).notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    consumedAt: timestamp("consumed_at"),
+    createdAt: createdAt(),
+  },
+  (table) => ({
+    google_connection_states_hash_uq: uniqueIndex(
+      "google_connection_states_hash_uq",
+    ).on(table.stateHash),
+    google_connection_states_expiry_idx: index(
+      "google_connection_states_expiry_idx",
+    ).on(table.expiresAt),
+    google_connection_states_user_idx: index(
+      "google_connection_states_user_idx",
+    ).on(table.userId),
+  }),
+);
+
 export const googleConnections = mysqlTable(
   "google_connections",
   {
@@ -405,6 +431,7 @@ export const schema = {
   sessions,
   oauthLoginStates,
   loginExchangeCodes,
+  googleConnectionStates,
   googleConnections,
   sheetBindings,
   leads,
