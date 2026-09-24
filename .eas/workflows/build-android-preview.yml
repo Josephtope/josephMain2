@@ -1,0 +1,17 @@
+name: Build Android Preview APK
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build_android_preview:
+    name: Build Android Preview APK
+    type: build
+    defaults:
+      run:
+        working_directory: ./mobile
+    params:
+      platform: android
+      profile: preview
+      message: "Android preview APK for Tecno KE5 / Android 10"
