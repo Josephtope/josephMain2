@@ -42,3 +42,8 @@ The repository and new Railway infrastructure have a passing automated baseline.
 2. Build the app for the Tecno KE5 running Android 10 and record the commit, profile, device model, OS version, and timestamp.
 3. Run the login, sender authorization, Sheets binding, worker safety, and controlled test-send gates in order.
 4. Do not proceed to Phase 13 or Phase 14 until all applicable rows are `Pass` with safe evidence.
+
+
+## Follow-up — EAS GitHub base directory correction
+
+The Expo EAS project `stealth-mail-studio-new` is linked to `Josephtope/josephMain2` with the GitHub base directory saved as `/mobile`. This ensures EAS Workflows reads the Expo app's `package.json`, lockfile, `app.json`, and `eas.json` instead of the backend monorepo root. The prior preview workflow reached the correct `preview` profile but failed before the Expo build because the base directory was unset and EAS ran the root dependency installation.
