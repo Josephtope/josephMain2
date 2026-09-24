@@ -2,6 +2,7 @@
   "expo": {
     "name": "Stealth Mail Studio",
     "slug": "stealth-mail-studio",
+    "owner": "josephapa",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,9 +15,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "com.josephmain.stealthmailstudio",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.josephmain.stealthmailstudio",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -52,6 +55,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "69cc2c6c-6196-4917-9094-ea6382eb958a"
+      }
     }
   }
 }
